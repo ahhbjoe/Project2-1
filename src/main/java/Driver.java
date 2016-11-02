@@ -19,8 +19,8 @@ public class Driver {
 		String inputDir = args[0];
 		String nGramLib = args[1];
 		String numberOfNGram = args[2];
-		String threshold = args[3];
-		String minFrequency = args[4];
+		String threshold = args[3];  //the word with frequency under threshold will be discarded
+		String numberOfFollowingWords = args[4];
 
 		//job1
 		Configuration conf1 = new Configuration();
@@ -50,7 +50,7 @@ public class Driver {
 		//2nd job
 		Configuration conf2 = new Configuration();
 		conf2.set("threshold", threshold);
-		conf2.set("n", minFrequency);
+		conf2.set("n", numberOfFollowingWords);
 		
 		DBConfiguration.configureDB(conf2, 
 				"com.mysql.jdbc.Driver",
