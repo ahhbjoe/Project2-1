@@ -93,7 +93,7 @@ public class LanguageModel {
 			}
 			//<50, <girl, bird>> <60, <boy...>>
 			Iterator<Integer> iter = tm.keySet().iterator();
-			for(int j=0; iter.hasNext() && j<n; j++) {
+			for(int j=0; iter.hasNext() && j<n;) {
 				int keyCount = iter.next();
 				List<String> words = tm.get(keyCount);
 				for(String curWord: words) {

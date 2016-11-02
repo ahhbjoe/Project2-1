@@ -15,10 +15,17 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 public class Driver {
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
+
+		String inputDir = args[0];
+		String nGramLib = args[1];
+		String numberOfNGram = args[2];
+		String threshold = args[3];
+		String minFrequency = args[4];
+
 		//job1
 		Configuration conf1 = new Configuration();
 		conf1.set("textinputformat.record.delimiter", ".");
-		conf1.set("noGram", args[2]);
+		conf1.set("noGram", numberOfNGram);
 		
 		Job job1 = Job.getInstance();
 		job1.setJobName("NGram");
@@ -32,9 +39,9 @@ public class Driver {
 		
 		job1.setInputFormatClass(TextInputFormat.class);
 		job1.setOutputFormatClass(TextOutputFormat.class);
-		
-		TextInputFormat.setInputPaths(job1, new Path(args[0]));
-		TextOutputFormat.setOutputPath(job1, new Path(args[1]));
+
+		TextInputFormat.setInputPaths(job1, new Path(inputDir));
+		TextOutputFormat.setOutputPath(job1, new Path(nGramLib));
 		job1.waitForCompletion(true);
 		
 		//how to connect two jobs?
@@ -42,8 +49,8 @@ public class Driver {
 		
 		//2nd job
 		Configuration conf2 = new Configuration();
-		conf2.set("threashold", args[3]);
-		conf2.set("n", args[4]);
+		conf2.set("threshold", threshold);
+		conf2.set("n", minFrequency);
 		
 		DBConfiguration.configureDB(conf2, 
 				"com.mysql.jdbc.Driver",
