@@ -27,7 +27,7 @@ public class Driver {
 		conf1.set("textinputformat.record.delimiter", ".");
 		conf1.set("noGram", numberOfNGram);
 		
-		Job job1 = Job.getInstance();
+		Job job1 = Job.getInstance(conf1);
 		job1.setJobName("NGram");
 		job1.setJarByClass(Driver.class);
 		
