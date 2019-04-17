@@ -45,6 +45,7 @@ public class Driver {
 		TextInputFormat.setInputPaths(job1, new Path(inputDir));
 		TextOutputFormat.setOutputPath(job1, new Path(nGramLib));
 		job1.waitForCompletion(true);
+
 		
 		//how to connect two jobs?
 		// last output is second input
@@ -52,7 +53,7 @@ public class Driver {
 		//2nd job
 		Configuration conf2 = new Configuration();
 		conf2.set("threshold", threshold);
-		conf2.set("n", numberOfFollowingWords);
+		conf2.set("topK", numberOfFollowingWords);
 
 		//Use dbConfiguration to configure all the jdbcDriver, db user, db password, database
 		DBConfiguration.configureDB(conf2, 
@@ -70,7 +71,7 @@ public class Driver {
 		  1. upload dependency to hdfs
 		  2. use this "addArchiveToClassPath" method to define the dependency path on hdfs
 		 */
-		job2.addArchiveToClassPath(new Path("path_to_ur_connector"));
+		job2.addArchiveToClassPath(new Path("/input/resource/mysql-connector.ddd.jar"));
 
 		//Why do we add map outputKey and outputValue?
 		//Because map output key and value are inconsistent with reducer output key and value

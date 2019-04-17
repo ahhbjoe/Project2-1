@@ -27,7 +27,6 @@ public class DBOutputWritable implements DBWritable{
 		arg0.setString(1, starting_phrase);
 		arg0.setString(2, following_word);
 		arg0.setInt(3, count);
-		
 	}
 
 }

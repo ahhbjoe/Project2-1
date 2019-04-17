@@ -21,36 +21,45 @@ public class NGramLibraryBuilder {
 		int noGram;
 		@Override
 		public void setup(Context context) {
-			Configuration conf = context.getConfiguration();
-			noGram = conf.getInt("noGram", 5);
+			Configuration configuration = context.getConfiguration();
+			noGram = configuration.getInt("noGram", 5);
 		}
 
 		// map method
 		@Override
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			
-			String line = value.toString();
-			
-			line = line.trim().toLowerCase();
-			line = line.replaceAll("[^a-z]", " ");
-			
-			String[] words = line.split("\\s+"); //split by ' ', '\t'...ect
-			
-			if(words.length<2) {
+			//inputKey: offset
+			//inputValue: line -> sentence
+			//read sentence -> split into 2gram-ngram
+			//write to disk
+			//outputKey = gram
+			//outputValue = 1
+
+			//split sentence into words
+			//i love big data n=3
+			//i love, i love big
+			//love big, love big data
+			//big data
+
+
+
+			String sentence = value.toString().trim().toLowerCase().replace("[^a-z]", " ");
+			String[] words = sentence.split("\\s+");
+			if (words.length < 2) {
 				return;
 			}
-			
-			//I love big data
-			StringBuilder sb;
-			for(int i = 0; i < words.length-1; i++) {
-				sb = new StringBuilder();
-				sb.append(words[i]);
-				for(int j=1; i+j<words.length && j<noGram; j++) {
-					sb.append(" ");
-					sb.append(words[i+j]);
-					context.write(new Text(sb.toString().trim()), new IntWritable(1));
+
+			StringBuilder phrase;
+			for (int i = 0; i < words.length; i++) {
+				phrase = new StringBuilder();
+				phrase.append(words[i]);
+				for (int j = 1; i + j < words.length && j < noGram; j++) {
+					phrase.append(" ");
+					phrase.append(words[i+j]);
+					context.write(new Text(phrase.toString().trim()), new IntWritable(1));
 				}
 			}
+
 		}
 	}
 
@@ -59,10 +68,13 @@ public class NGramLibraryBuilder {
 		@Override
 		public void reduce(Text key, Iterable<IntWritable> values, Context context)
 				throws IOException, InterruptedException {
+			//key = ngram big data
+			//value = 1, 1, 1, 1....
 			int sum = 0;
-			for(IntWritable value: values) {
+			for (IntWritable value: values) {
 				sum += value.get();
 			}
+
 			context.write(key, new IntWritable(sum));
 		}
 	}

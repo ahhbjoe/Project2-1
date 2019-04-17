@@ -20,85 +20,80 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 public class LanguageModel {
 	public static class Map extends Mapper<LongWritable, Text, Text, Text> {
 
-		int threashold;
+		int threshold;
 		// get the threashold parameter from the configuration
 		@Override
 		public void setup(Context context) {
 			Configuration conf = context.getConfiguration();
-			threashold = conf.getInt("threashold", 20);
+			threshold = conf.getInt("threashold", 20);
 		}
 
 		
 		@Override
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			if((value == null) || (value.toString().trim()).length() == 0) {
+			//value: love big data\t100
+			//outputKey: love big
+			//outputValue: data=100
+
+			String[] phrase_count = value.toString().trim().split("\t");
+			int count = Integer.parseInt(phrase_count[1]);
+			if (count < threshold) {
 				return;
 			}
-			//this is cool\t20
-			String line = value.toString().trim();
-			
-			String[] wordsPlusCount = line.split("\t");
-			if(wordsPlusCount.length < 2) {
-				return;
+
+			String[] words = phrase_count[0].split(" ");
+			//love, big, data
+			StringBuilder outputKey = new StringBuilder();
+			for (int i = 0; i < words.length - 1; i++) {
+				outputKey.append(words[i] + " ");
 			}
-			
-			String[] words = wordsPlusCount[0].split("\\s+");
-			int count = Integer.valueOf(wordsPlusCount[1]);
-			
-			if(count < threashold) {
-				return;
-			}
-			
-			//this is --> cool = 20
-			StringBuilder sb = new StringBuilder();
-			for(int i = 0; i < words.length-1; i++) {
-				sb.append(words[i]).append(" ");
-			}
-			String outputKey = sb.toString().trim();
-			String outputValue = words[words.length - 1];
-			
-			if(!((outputKey == null) || (outputKey.length() <1))) {
-				context.write(new Text(outputKey), new Text(outputValue + "=" + count));
-			}
+			//love big
+
+			String outputValue = words[words.length - 1] + "=" + count;
+			//data=100
+
+			context.write(new Text(outputKey.toString().trim()), new Text(outputValue));
 		}
 	}
 
 	public static class Reduce extends Reducer<Text, Text, DBOutputWritable, NullWritable> {
 
-		int n;
+		int topK;
 		// get the n parameter from the configuration
 		@Override
 		public void setup(Context context) {
-			Configuration conf = context.getConfiguration();
-			n = conf.getInt("n", 5);
+			topK = context.getConfiguration().getInt("topK", 5);
 		}
 
 		@Override
 		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-			
-			//this is, <girl = 50, boy = 60>
-			TreeMap<Integer, List<String>> tm = new TreeMap<Integer, List<String>>(Collections.reverseOrder());
-			for(Text val: values) {
-				String curValue = val.toString().trim();
-				String word = curValue.split("=")[0].trim();
-				int count = Integer.parseInt(curValue.split("=")[1].trim());
-				if(tm.containsKey(count)) {
+			//inputKey = love big
+			//inputValue = <data=100, island=28, girl=132...>
+			//sort based on count -> topK
+			//insert into database -> 3 columns: inputPhrase, followingWord, count
+
+			//TreeMap<Count, List<word>>
+			TreeMap<Integer, List<String>> tm = new TreeMap<Integer, List<String>>(Collections.<Integer>reverseOrder());
+			for (Text value: values) {
+				String curValue = value.toString().trim();
+				//data=100
+				String word = curValue.split("=")[0];
+				int count = Integer.parseInt(curValue.split("=")[1]);
+				if (tm.containsKey(count)) {
 					tm.get(count).add(word);
-				}
-				else {
+				} else {
 					List<String> list = new ArrayList<String>();
 					list.add(word);
 					tm.put(count, list);
 				}
 			}
-			//<50, <girl, bird>> <60, <boy...>>
-			Iterator<Integer> iter = tm.keySet().iterator();
-			for(int j=0; iter.hasNext() && j<n;) {
-				int keyCount = iter.next();
-				List<String> words = tm.get(keyCount);
-				for(String curWord: words) {
-					context.write(new DBOutputWritable(key.toString(), curWord, keyCount),NullWritable.get());
-					j++;
+
+			Iterator<Integer> iterator = tm.keySet().iterator();
+			for (int j = 0; j < topK;) {
+				int count = iterator.next();
+				List<String> words = tm.get(count);
+				for (String curWord: words) {
+					context.write(new DBOutputWritable(key.toString(), curWord, count), NullWritable.get());
 				}
 			}
 		}
