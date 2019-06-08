@@ -1,5 +1,6 @@
 .idea/
-NGram.iml
-.DS_Store
-.project
-bin/
+*.iml
+input/
+output/
+target/
+src/main/resources/config.properties

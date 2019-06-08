@@ -43,7 +43,7 @@ public class NGramLibraryBuilder {
 
 
 
-			String sentence = value.toString().trim().toLowerCase().replace("[^a-z]", " ");
+			String sentence = value.toString().toLowerCase().replaceAll("[^a-z]", " ").trim();
 			String[] words = sentence.split("\\s+");
 			if (words.length < 2) {
 				return;

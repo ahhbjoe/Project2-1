@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -21,6 +22,12 @@ public class Driver {
 		String numberOfNGram = args[2];
 		String threshold = args[3];  //the word with frequency under threshold will be discarded
 		String numberOfFollowingWords = args[4];
+
+		Properties properties = new Properties();
+		properties.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"));
+		String url = properties.getProperty("jdbc.url");
+		String username = properties.getProperty("jdbc.username");
+		String password = properties.getProperty("jdbc.password");
 
 		//job1
 		Configuration conf1 = new Configuration();
@@ -57,21 +64,14 @@ public class Driver {
 
 		//Use dbConfiguration to configure all the jdbcDriver, db user, db password, database
 		DBConfiguration.configureDB(conf2, 
-				"com.mysql.jdbc.Driver",
-				"jdbc:mysql://ip_address:port/test",
-				"root",
-				"password");
+				"com.mysql.cj.jdbc.Driver",
+				url,
+				username,
+				password);
 		
 		Job job2 = Job.getInstance(conf2);
 		job2.setJobName("Model");
 		job2.setJarByClass(Driver.class);
-
-		//How to add external dependency to current project?
-		/*
-		  1. upload dependency to hdfs
-		  2. use this "addArchiveToClassPath" method to define the dependency path on hdfs
-		 */
-		job2.addArchiveToClassPath(new Path("/input/resource/mysql-connector.ddd.jar"));
 
 		//Why do we add map outputKey and outputValue?
 		//Because map output key and value are inconsistent with reducer output key and value
@@ -87,8 +87,7 @@ public class Driver {
 		job2.setOutputFormatClass(DBOutputFormat.class);
 
 		//use dbOutputformat to define the table name and columns
-		DBOutputFormat.setOutput(job2, "output", 
-				new String[] {"starting_phrase", "following_word", "count"});
+		DBOutputFormat.setOutput(job2, "output", "starting_phrase", "following_word", "count");
 
 		TextInputFormat.setInputPaths(job2, args[1]);
 		job2.waitForCompletion(true);

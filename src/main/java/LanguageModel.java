@@ -21,11 +21,11 @@ public class LanguageModel {
 	public static class Map extends Mapper<LongWritable, Text, Text, Text> {
 
 		int threshold;
-		// get the threashold parameter from the configuration
+		// get the threshold parameter from the configuration
 		@Override
 		public void setup(Context context) {
 			Configuration conf = context.getConfiguration();
-			threshold = conf.getInt("threashold", 20);
+			threshold = conf.getInt("threshold", 20);
 		}
 
 		
@@ -90,6 +90,9 @@ public class LanguageModel {
 
 			Iterator<Integer> iterator = tm.keySet().iterator();
 			for (int j = 0; j < topK;) {
+				if (!iterator.hasNext()) {
+					break;
+				}
 				int count = iterator.next();
 				List<String> words = tm.get(count);
 				for (String curWord: words) {
